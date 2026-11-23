@@ -1,0 +1,17 @@
+data:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  image_size: 224
+  validation_size: 0.15
+  test_size: 0.15
+  seed: 42
+model:
+  name: efficientnet_b0
+  pretrained: true
+  dropout: 0.3
+training:
+  batch_size: 32
+  epochs: 10
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  num_workers: 0

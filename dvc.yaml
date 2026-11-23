@@ -1,0 +1,130 @@
+stages:
+  prepare:
+    cmd: >-
+      python -m src.data.prepare
+      --raw-dir ${data.raw_dir}
+      --output-dir ${data.processed_dir}
+      --validation-size ${data.validation_size}
+      --test-size ${data.test_size}
+      --seed ${data.seed}
+    deps:
+      - data/raw
+      - src/data/prepare.py
+    params:
+      - data
+    outs:
+      - data/processed
+  train_baseline:
+    cmd: >-
+      python -m src.models.baseline
+      --processed-dir ${data.processed_dir}
+      --model-dir models
+      --epochs ${training.epochs}
+      --batch-size ${training.batch_size}
+      --learning-rate ${training.learning_rate}
+      --image-size ${data.image_size}
+    deps:
+      - data/processed
+      - src/models/baseline.py
+      - src/models/model.py
+      - src/models/train.py
+      - src/utils/tracking.py
+    params:
+      - data
+      - training
+    outs:
+      - models/baseline.pt
+    metrics:
+      - models/baseline_metrics.json
+  train:
+    cmd: >-
+      python -m src.models.train
+      --architecture efficientnet_b0
+      --image-size ${data.image_size}
+      --batch-size ${training.batch_size}
+      --epochs ${training.epochs}
+      --learning-rate ${training.learning_rate}
+      --weight-decay ${training.weight_decay}
+      --dropout ${model.dropout}
+      --pretrained ${model.pretrained}
+      --num-workers ${training.num_workers}
+      --seed ${data.seed}
+    deps:
+      - data/processed
+      - src/models/model.py
+      - src/models/train.py
+      - src/utils/tracking.py
+    params:
+      - model
+      - training
+    outs:
+      - models/best.pt
+    metrics:
+      - models/metrics.json
+  train_densenet:
+    cmd: >-
+      python -m src.models.train
+      --architecture densenet121
+      --image-size ${data.image_size}
+      --batch-size ${training.batch_size}
+      --epochs ${training.epochs}
+      --learning-rate ${training.learning_rate}
+      --weight-decay ${training.weight_decay}
+      --dropout ${model.dropout}
+      --pretrained ${model.pretrained}
+      --num-workers ${training.num_workers}
+      --seed ${data.seed}
+    deps:
+      - data/processed
+      - src/models/model.py
+      - src/models/train.py
+      - src/utils/tracking.py
+    params:
+      - data
+      - training
+    outs:
+      - models/densenet121_best.pt
+    metrics:
+      - models/densenet121_metrics.json
+  evaluate:
+    cmd: python -m src.models.evaluate --image-size ${data.image_size}
+    deps:
+      - data/processed
+      - models/best.pt
+      - src/models/evaluate.py
+      - src/utils/tracking.py
+    outs:
+      - models/test_metrics.json
+  evaluate_baseline:
+    cmd: >-
+      python -m src.models.evaluate
+      --checkpoint models/baseline.pt
+      --split test
+      --image-size ${data.image_size}
+    deps:
+      - data/processed
+      - models/baseline.pt
+      - src/models/evaluate.py
+      - src/models/model.py
+      - src/utils/tracking.py
+    outs:
+      - models/baseline_cnn_test_metrics.json
+    params:
+      - data.image_size
+
+  export:
+    cmd: python -m src.models.export_onnx
+    deps:
+      - models/best.pt
+      - src/models/model.py
+      - src/models/export_onnx.py
+    outs:
+      - models/model.onnx
+  export_densenet:
+    cmd: python -m src.models.export_onnx --checkpoint models/densenet121_best.pt --output models/densenet121.onnx
+    deps:
+      - models/densenet121_best.pt
+      - src/models/model.py
+      - src/models/export_onnx.py
+    outs:
+      - models/densenet121.onnx

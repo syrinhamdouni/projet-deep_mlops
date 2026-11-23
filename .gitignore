@@ -1,8 +1,34 @@
+# Datasets
 data/raw/
 data/processed/
+data/processed_backup/
+
+# Model checkpoints and exports
 models/*.pt
 models/*.onnx
+models/*.onnx.data
+
+# Backups
+models_backup_before_dvc/
+
+# MLflow
 mlruns/
+mlflow.db
+mlflow.db-*
+mlartifacts/
+
+# Python
 .venv/
+venv/
 __pycache__/
+*.py[cod]
+
+# Secrets
 .env
+.env.*
+
+# System
+.DS_Store
+Thumbs.db
+# Jupyter temporary files
+.ipynb_checkpoints/

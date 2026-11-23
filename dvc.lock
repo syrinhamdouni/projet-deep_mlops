@@ -1,0 +1,247 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python -m src.data.prepare --raw-dir data/raw --output-dir
+      data/processed --validation-size 0.15 --test-size 0.15 --seed 42
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: fe176bed0c0c37b250ebaa49a125d8fc.dir
+      size: 342230723
+      nfiles: 20639
+    - path: src/data/prepare.py
+      hash: md5
+      md5: 5e0dc6e8ef3505808831805555e69c59
+      size: 4656
+    params:
+      params.yaml:
+        data:
+          raw_dir: data/raw
+          processed_dir: data/processed
+          image_size: 224
+          validation_size: 0.15
+          test_size: 0.15
+          seed: 42
+    outs:
+    - path: data/processed
+      hash: md5
+      md5: 4e16f37c551fe6ceecb32a52ea6b5a54.dir
+      size: 3160679
+      nfiles: 4
+  train_baseline:
+    cmd: python -m src.models.baseline --processed-dir data/processed
+      --model-dir models --epochs 10 --batch-size 32 --learning-rate 0.0003
+      --image-size 224
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 4e16f37c551fe6ceecb32a52ea6b5a54.dir
+      size: 3160679
+      nfiles: 4
+    - path: src/models/baseline.py
+      hash: md5
+      md5: fb78ebe19b557ff3004ff5cee037bb1d
+      size: 4319
+    - path: src/models/model.py
+      hash: md5
+      md5: d632c311dbca3463d4b84c0d96b97459
+      size: 2353
+    - path: src/models/train.py
+      hash: md5
+      md5: aa36207d098e4d92c0e9ff4caba2412c
+      size: 8363
+    - path: src/utils/tracking.py
+      hash: md5
+      md5: 97bc390622f45950f78512f283890cad
+      size: 2065
+    params:
+      params.yaml:
+        data:
+          raw_dir: data/raw
+          processed_dir: data/processed
+          image_size: 224
+          validation_size: 0.15
+          test_size: 0.15
+          seed: 42
+        training:
+          batch_size: 32
+          epochs: 10
+          learning_rate: 0.0003
+          weight_decay: 0.0001
+          num_workers: 0
+    outs:
+    - path: models/baseline.pt
+      hash: md5
+      md5: bc57fdd87e587e9702c3b9153c2ff045
+      size: 85473
+    - path: models/baseline_metrics.json
+      hash: md5
+      md5: c1d7d4adb5b0827cc86a00dc1fcaca0c
+      size: 76
+  train:
+    cmd: python -m src.models.train --architecture efficientnet_b0 --image-size
+      224 --batch-size 32 --epochs 10 --learning-rate 0.0003 --weight-decay
+      0.0001 --dropout 0.3 --pretrained true --num-workers 0 --seed 42
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 4e16f37c551fe6ceecb32a52ea6b5a54.dir
+      size: 3160679
+      nfiles: 4
+    - path: src/models/model.py
+      hash: md5
+      md5: d632c311dbca3463d4b84c0d96b97459
+      size: 2353
+    - path: src/models/train.py
+      hash: md5
+      md5: aa36207d098e4d92c0e9ff4caba2412c
+      size: 8363
+    - path: src/utils/tracking.py
+      hash: md5
+      md5: 97bc390622f45950f78512f283890cad
+      size: 2065
+    params:
+      params.yaml:
+        model:
+          name: efficientnet_b0
+          pretrained: true
+          dropout: 0.3
+        training:
+          batch_size: 32
+          epochs: 10
+          learning_rate: 0.0003
+          weight_decay: 0.0001
+          num_workers: 0
+    outs:
+    - path: models/best.pt
+      hash: md5
+      md5: c192d8b3581460f1f26208a7925c431f
+      size: 16381797
+    - path: models/metrics.json
+      hash: md5
+      md5: e3986411866df6aece7f49fe306a385b
+      size: 76
+  train_densenet:
+    cmd: python -m src.models.train --architecture densenet121 --image-size 224
+      --batch-size 32 --epochs 10 --learning-rate 0.0003 --weight-decay 0.0001
+      --dropout 0.3 --pretrained true --num-workers 0 --seed 42
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 4e16f37c551fe6ceecb32a52ea6b5a54.dir
+      size: 3160679
+      nfiles: 4
+    - path: src/models/model.py
+      hash: md5
+      md5: d632c311dbca3463d4b84c0d96b97459
+      size: 2353
+    - path: src/models/train.py
+      hash: md5
+      md5: aa36207d098e4d92c0e9ff4caba2412c
+      size: 8363
+    - path: src/utils/tracking.py
+      hash: md5
+      md5: 97bc390622f45950f78512f283890cad
+      size: 2065
+    params:
+      params.yaml:
+        data:
+          raw_dir: data/raw
+          processed_dir: data/processed
+          image_size: 224
+          validation_size: 0.15
+          test_size: 0.15
+          seed: 42
+        training:
+          batch_size: 32
+          epochs: 10
+          learning_rate: 0.0003
+          weight_decay: 0.0001
+          num_workers: 0
+    outs:
+    - path: models/densenet121_best.pt
+      hash: md5
+      md5: 08e47cbdbc4acb1a6ff60828df7fa2d7
+      size: 28479446
+    - path: models/densenet121_metrics.json
+      hash: md5
+      md5: bb5ea06de695c2028608cf596a4dced9
+      size: 76
+  evaluate:
+    cmd: python -m src.models.evaluate --image-size 224
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 4e16f37c551fe6ceecb32a52ea6b5a54.dir
+      size: 3160679
+      nfiles: 4
+    - path: models/best.pt
+      hash: md5
+      md5: c192d8b3581460f1f26208a7925c431f
+      size: 16381797
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: a4c9c7237ca129de686b39ff1ac8a73a
+      size: 3802
+    - path: src/utils/tracking.py
+      hash: md5
+      md5: 97bc390622f45950f78512f283890cad
+      size: 2065
+    outs:
+    - path: models/test_metrics.json
+      hash: md5
+      md5: df073eab0d72f21717ff7768a9bf8531
+      size: 5274
+  evaluate_baseline:
+    cmd: python -m src.models.evaluate --checkpoint models/baseline.pt --split
+      test --image-size 224
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 4e16f37c551fe6ceecb32a52ea6b5a54.dir
+      size: 3160679
+      nfiles: 4
+    - path: models/baseline.pt
+      hash: md5
+      md5: bc57fdd87e587e9702c3b9153c2ff045
+      size: 85473
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: a4c9c7237ca129de686b39ff1ac8a73a
+      size: 3802
+    - path: src/models/model.py
+      hash: md5
+      md5: d632c311dbca3463d4b84c0d96b97459
+      size: 2353
+    - path: src/utils/tracking.py
+      hash: md5
+      md5: 97bc390622f45950f78512f283890cad
+      size: 2065
+    params:
+      params.yaml:
+        data.image_size: 224
+    outs:
+    - path: models/baseline_cnn_test_metrics.json
+      hash: md5
+      md5: ebce7a2b291734f0a7878da790d7b71d
+      size: 5650
+  export:
+    cmd: python -m src.models.export_onnx
+    deps:
+    - path: models/best.pt
+      hash: md5
+      md5: c192d8b3581460f1f26208a7925c431f
+      size: 16381797
+    - path: src/models/export_onnx.py
+      hash: md5
+      md5: afc7ae39c8f08f8d95fc8bfd2de07197
+      size: 1837
+    - path: src/models/model.py
+      hash: md5
+      md5: d632c311dbca3463d4b84c0d96b97459
+      size: 2353
+    outs:
+    - path: models/model.onnx
+      hash: md5
+      md5: 87126ad1b33b6d48ac4980d0a32849e1
+      size: 625059
