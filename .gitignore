@@ -32,3 +32,6 @@ __pycache__/
 Thumbs.db
 # Jupyter temporary files
 .ipynb_checkpoints/
+# Monitoring database
+backend/monitoring.db
+backend/monitoring.db-*

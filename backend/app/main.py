@@ -12,7 +12,10 @@ from backend.app.schemas import HealthResponse, PredictionResponse
 
 ROOT = Path(__file__).resolve().parents[2]
 engine = InferenceEngine(ROOT / "models/model.onnx", ROOT / "models/model.json")
-prediction_monitor = PredictionMonitor(engine.training_class_distribution)
+prediction_monitor = PredictionMonitor(
+    engine.training_class_distribution,
+    ROOT / "backend" / "monitoring.db",
+)
 app = FastAPI(title="FarmPulse Plant Disease API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
